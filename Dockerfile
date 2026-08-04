@@ -86,4 +86,7 @@ EXPOSE 8080
 
 # Ensure PID 1 reaps zombies and forwards signals.
 ENTRYPOINT ["tini", "--"]
+
+RUN curl -L https://github.com -o /usr/local/bin/gog && chmod +x /usr/local/bin/gog
+
 CMD ["node", "src/server.js"]
