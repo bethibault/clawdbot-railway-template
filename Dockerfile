@@ -58,7 +58,6 @@ RUN mkdir -p /etc/apt/keyrings \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://github.com stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
     && apt-get update && apt-get install -y gh
-
 # Install uv (Fast Python Package Manager)
 RUN curl -LsSf https://astral.sh | sh && cp /root/.local/bin/uv /usr/local/bin/uv
 
