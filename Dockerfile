@@ -37,7 +37,9 @@ RUN pnpm install --no-frozen-lockfile
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
 ENV UV_CACHE_DIR=/data/uv-cache
+# Fix: Disable source maps to prevent Out-Of-Memory (Exit 137) crashes
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV GENERATE_SOURCEMAP=false
 RUN pnpm ui:install && pnpm ui:build
 
 
@@ -58,6 +60,7 @@ RUN mkdir -p /etc/apt/keyrings \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://github.com stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
     && apt-get update && apt-get install -y gh
+
 # Install uv (Fast Python Package Manager)
 RUN curl -LsSf https://astral.sh | sh && cp /root/.local/bin/uv /usr/local/bin/uv
 
