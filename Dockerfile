@@ -43,9 +43,13 @@ RUN pnpm ui:install && pnpm ui:build
 FROM node:22-bookworm
 ENV NODE_ENV=production
 
+# curl + tar are needed at runtime to install skill binaries into /data/bin
+# without rebuilding the image.
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
+    curl \
+    tar \
     tini \
     python3 \
     python3-venv \
@@ -55,13 +59,14 @@ RUN apt-get update \
 RUN corepack enable && corepack prepare pnpm@10.23.0 --activate
 
 # Persist user-installed tools by default by targeting the Railway volume.
+# - skill binaries (gog, etc.) -> /data/bin
 # - npm global installs -> /data/npm
 # - pnpm global installs -> /data/pnpm (binaries) + /data/pnpm-store (store)
 ENV NPM_CONFIG_PREFIX=/data/npm
 ENV NPM_CONFIG_CACHE=/data/npm-cache
 ENV PNPM_HOME=/data/pnpm
 ENV PNPM_STORE_DIR=/data/pnpm-store
-ENV PATH="/data/npm/bin:/data/pnpm:${PATH}"
+ENV PATH="/data/bin:/data/npm/bin:/data/pnpm:${PATH}"
 
 WORKDIR /app
 
@@ -86,7 +91,5 @@ EXPOSE 8080
 
 # Ensure PID 1 reaps zombies and forwards signals.
 ENTRYPOINT ["tini", "--"]
-
-RUN curl -L https://github.com -o /usr/local/bin/gog && chmod +x /usr/local/bin/gog
 
 CMD ["node", "src/server.js"]
