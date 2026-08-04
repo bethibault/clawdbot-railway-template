@@ -36,6 +36,7 @@ RUN set -eux; \
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
+ENV UV_CACHE_DIR=/data/uv-cache
 RUN pnpm ui:install && pnpm ui:build
 
 
@@ -50,6 +51,18 @@ RUN apt-get update \
     python3 \
     python3-venv \
   && rm -rf /var/lib/apt/lists/*
+# Global Dependency Injection for OpenClaw Skills
+RUN apt-get update && apt-get install -y --no-install-recommends git jq && rm -rf /var/lib/apt/lists/*
+
+# Install gh (Official GitHub management CLI)
+RUN curl -fsSL https://github.com | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://github.com stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt-get update && apt-get install -y gh
+
+# Install uv (Fast Python Package Manager)
+RUN curl -LsSf https://astral.sh | sh && cp /root/.local/bin/uv /usr/local/bin/uv
+
 
 # `openclaw update` expects pnpm. Provide it in the runtime image.
 RUN corepack enable && corepack prepare pnpm@10.23.0 --activate
