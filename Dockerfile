@@ -37,6 +37,7 @@ RUN pnpm install --no-frozen-lockfile
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
 ENV UV_CACHE_DIR=/data/uv-cache
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm ui:install && pnpm ui:build
 
 
