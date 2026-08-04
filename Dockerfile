@@ -37,12 +37,9 @@ RUN pnpm install --no-frozen-lockfile
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
 ENV UV_CACHE_DIR=/data/uv-cache
-# Fix: Disable source maps to save 50% RAM and prevent Exit 137
 ENV GENERATE_SOURCEMAP=false
-ENV NODE_OPTIONS="--max-old-space-size=2048"
-RUN pnpm ui:install && pnpm ui:build
-
-
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN pnpm ui:install && NODE_OPTIONS="--max-old-space-size=4096" pnpm ui:build
 
 # Runtime image
 FROM node:22-bookworm
@@ -55,11 +52,12 @@ RUN apt-get update \
     python3 \
     python3-venv \
   && rm -rf /var/lib/apt/lists/*
-# Install gh (Official GitHub CLI) - Direct Binary Download
-RUN curl -L https://github.com -o gh.tar.gz \
-    && tar -xzf gh.tar.gz \
-    && mv gh_2.40.0_linux_amd64/bin/gh /usr/local/bin/ \
-    && rm -rf gh.tar.gz gh_2.40.0_linux_amd64
+# Install gh (Official GitHub management CLI)
+RUN mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt-get update && apt-get install -y gh
 
 # Install uv (Fast Python Package Manager)
 RUN curl -LsSf https://astral.sh | sh && cp /root/.local/bin/uv /usr/local/bin/uv
